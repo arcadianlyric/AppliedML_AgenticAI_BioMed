@@ -76,27 +76,61 @@ End-to-end ML engineering across production genomics pipelines, foundation model
 
 ## Architecture: Integrated Workflow
 
-```
-Sequencing run (MGI stLFR / PCR-free)
-        │
-        ▼
-[LFR_DataMonitor] ── QC metrics + drift score
-        │                       │
-        │              drift detected?
-        │                 YES ──▶ [DeepVariant_FineTuning]
-        │                              │ retrained model
-        ▼                              ▼
-[DNBSEQ_Complete_WGS] ◀── updated model weights
-        │
-        ▼
-  Phased VCF (SNP / Indel / SV)
-        │
-        ▼
-[Agentic_bioArchitect] ── downstream functional analysis pipeline
-[ZeroShot_ImmuneFeatureDrift] ── longitudinal immune monitoring
-        │
-        ▼
-[PhasedVariants_AgenticCurator] ── variant interpretation (RAG + KG + dual-agent review)
+```mermaid
+flowchart TD
+    SEQ(["`🧬 **Sequencing Run**
+    MGI stLFR · PCR-free · cWGS`"])
+
+    subgraph MONITOR["📡 QC & Drift Detection"]
+        LFR["`**2. LFR_DataMonitor**
+        Snakemake · LightGBM · Autoencoders
+        PCA · Isolation Forest
+        Per-run feature matrices + drift score`"]
+    end
+
+    subgraph FINETUNE["🔧 Model Adaptation"]
+        DFT["`**3. DeepVariant_FineTuning**
+        TensorFlow · TFRecord · hap.py
+        Transfer learning on pileup image tensors
+        Benchmarked vs GIAB HG001/HG002`"]
+    end
+
+    subgraph PIPELINE["⚙️ Production WGS Pipeline"]
+        WGS["`**1. DNBSEQ_Complete_WGS**
+        Nextflow DSL2 · Lariat · BWA
+        DeepVariant · GATK · HapCUT2
+        Pangenome-aware · MegaBOLT`"]
+    end
+
+    subgraph DOWNSTREAM["🔬 Downstream Analysis"]
+        BIO["`**4. Agentic_bioArchitect**
+        CrewAI · DeepSeek · Snakemake
+        Multi-agent pipeline design
+        16S rRNA metatranscriptomics`"]
+        ZS["`**5. ZeroShot_ImmuneFeatureDrift**
+        scGPT-blood · CIBERSORTx
+        Zero-shot longitudinal monitoring
+        T/B/NK cell population drift`"]
+    end
+
+    subgraph INTERPRET["🤖 Agentic Clinical Interpretation"]
+        PVC["`**6. PhasedVariants_AgenticCurator**
+        LangChain · FAISS · PrimeKG · VEP
+        DeepSeek + Grok dual-agent review
+        RAG · KG · hallucination reduction`"]
+    end
+
+    VCF(["📄 Phased VCF
+    SNP · Indel · SV"])
+
+    SEQ --> LFR
+    LFR -- "drift detected" --> DFT
+    DFT -- "updated model weights" --> WGS
+    LFR -- "QC passed" --> WGS
+    WGS --> VCF
+    VCF --> BIO
+    VCF --> ZS
+    VCF --> PVC
 ```
 
 The six projects form a coherent ML system: a production pipeline (1) fed by monitored, drift-corrected models (2, 3), extended by agentic automation (4), foundation model analytics (5), and closed by automated clinical interpretation of the phased variants produced in step 1 (6).
