@@ -6,6 +6,22 @@ End-to-end ML engineering across production genomics pipelines, foundation model
 
 ---
 
+## Enterprise Agentic AI Pain Points
+
+Seven pain points commonly block enterprise agentic AI deployments. Each project below targets one or more directly.
+
+| # | Pain Point | Root Cause |
+|---|---|---|
+| P1 | **Multi-step error compounding** | 95% per-step accuracy → 60% over 10 steps |
+| P2 | **Tool-use unreliability** | Hallucinated parameters, silent failures, wrong call order |
+| P3 | **Eval gap** | No standard metric for agent performance, hallucination rate, tool accuracy |
+| P4 | **Observability blindness** | Can't trace which step in a loop caused the failure |
+| P5 | **Context degradation** | Retrieval quality and constraint memory decay in long sessions |
+| P6 | **Human-in-loop design** | No principled stopping criterion — agent either over-asks or goes rogue |
+| P7 | **Production drift** | ML tools silently degrade when input distribution shifts |
+
+---
+
 ## Projects
 
 ### 1. [DNBSEQ Complete WGS Pipeline](https://github.com/Complete-Genomics/DNBSEQ_Complete_WGS)
@@ -14,6 +30,7 @@ End-to-end ML engineering across production genomics pipelines, foundation model
 - **Stack**: Nextflow DSL2 · Lariat · BWA · DeepVariant · GATK · HapCUT2 · SOAPnuke · MegaBOLT · Singularity
 - **Scale**: Parallel real-world human sequencing data 
 - **Highlights**: Pangenome-aware DeepVariant (GBZ graph reference), phased SNP/indel/SV calls, modular process design with configurable variant callers and aligners
+- **Pain points addressed**: Prerequisite for enterprise agentic reliability — demonstrates production ML under CLIA/HIPAA regulatory constraints (auditable, reproducible, versioned). Agentic systems are only trustworthy if the upstream ML tools they call meet this bar.
 
 ---
 
@@ -22,6 +39,7 @@ End-to-end ML engineering across production genomics pipelines, foundation model
 
 - **Stack**: Snakemake · BWA · DeepVariant · LightGBM · Autoencoders · PCA · Isolation Forest
 - **Highlights**: Per-run feature matrices from alignment + variant metrics; unsupervised drift detection; automated fine-tuning trigger when distribution shift exceeds threshold
+- **Pain points addressed**: **P4 Observability** — real-time monitoring of ML tool output quality with alerting; **P7 Production drift** — unsupervised detection of input distribution shift (insert-size, GC bias, UMI quality) before it silently degrades model accuracy; **P2 Tool-use reliability** — automated trigger prevents agents from calling degraded models.
 
 ---
 
@@ -30,6 +48,7 @@ End-to-end ML engineering across production genomics pipelines, foundation model
 
 - **Stack**: TensorFlow/Keras · TFRecord · hap.py · GIAB truth sets · Google Colab
 - **Highlights**: Transfer learning on pileup image tensors; benchmarked against GIAB HG001/HG002; integrates upstream drift signals from LFR_DataMonitor for automated adaptation without training from scratch
+- **Pain points addressed**: **P7 Production drift** — closes the loop on drift detection by automated model adaptation; demonstrates the MLOps pattern (detect → retrain → validate → deploy) that enterprise agentic systems need for any ML tool in their stack.
 
 ---
 
@@ -38,6 +57,7 @@ End-to-end ML engineering across production genomics pipelines, foundation model
 
 - **Stack**: CrewAI · OpenAI / DeepSeek / Gemini / Grok · Tavily · PubMed API · MEGAHIT · DADA2 · Snakemake
 - **Highlights**: Phase 1 — research + reviewer agents produce validated workflow designs; Phase 2 — coder agents generate production Python/Snakemake; benchmarked against ZymoBIOMICS community standards
+- **Pain points addressed**: **P1 Multi-step error compounding** — Researcher → Analyst → Reviewer chain with reflection loop prevents error propagation; **P6 Human-in-loop design** — quality gate (score ≥ 7/10) controls when to proceed vs. iterate; **P2 Tool-use reliability** — structured tool wrappers (Tavily, PubMed) with validated output schemas before passing to downstream agents.
 
 ---
 
@@ -45,7 +65,8 @@ End-to-end ML engineering across production genomics pipelines, foundation model
 > Zero-shot foundation model monitoring of immune aging (immunosenescence) across longitudinal bulk RNA-seq without fine-tuning on small datasets.
 
 - **Stack**: scGPT-blood (12-layer Transformer, 10.3 M cells pre-training) · CIBERSORTx · Isolation Forest · PCA · stLFR sequencing
-- **Highlights**: Tracks T-cell, B-cell, monocyte, NK cell shifts across 3 PBMC timepoints (2024–2026); identifies isoform switches in aging markers (PTPRC/CD45); cosine + Euclidean embedding drift metrics
+- **Highlights**: Tracks immune shifts across 3 PBMC timepoints (2024–2026); identifies isoform switches in aging markers (PTPRC/CD45); cosine + Euclidean embedding drift metrics
+- **Pain points addressed**: **P5 Context degradation** — embedding drift metrics quantify when a foundation model's internal representation of a domain has shifted, the same problem agents face when long-session retrieval quality decays; **P7 Production drift** — zero-shot application avoids overfitting on small N, a pattern directly applicable to enterprise agents that must generalize across new user contexts without per-customer fine-tuning.
 
 ---
 
@@ -58,6 +79,22 @@ End-to-end ML engineering across production genomics pipelines, foundation model
   - **Dual-agent review loop**: Output Agent (DeepSeek, RAG + KG context) generates analysis; Review Agent (Grok) independently scores 5 dimensions (0–10) and flags hallucinations; loop iterates until quality threshold (7.0/10) is met. Different LLMs used by design to eliminate shared blind spots
   - **Hallucination reduction**: Cross-model review + FAISS-grounded retrieval; benchmarked against single-agent baselines (`llm_queryAlone`, `llm_augmented`, `llm_rag`, v1 7-agent legacy)
   - Directly consumes phased VCF output from Project 1 (DNBSEQ_Complete_WGS)
+- **Pain points addressed**: **P1 Multi-step error** — 3-iteration stop/revise loop with explicit convergence criterion prevents unchecked error propagation; **P3 Eval gap** — 5-dimension scoring rubric (accuracy, completeness, clinical relevance, hallucination rate, tool-use accuracy) is a deployable evaluation framework for any agentic output; **P5 Context degradation** — FAISS chunk-alignment fix ensures retrieval context matches LLM window; **P6 Human-in-loop** — quality gate (7.0/10) and stop/revise logic encode principled stopping criterion; **P2 Tool-use reliability** — cross-model adversarial review flags tool-call errors that a single LLM would miss.
+
+---
+
+## Pain Point Coverage Matrix
+
+| Project | P1 Multi-step | P2 Tool reliability | P3 Eval gap | P4 Observability | P5 Context | P6 Human-in-loop | P7 Prod drift |
+|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| 1. DNBSEQ WGS | | | | | | | ✓ (baseline) |
+| 2. LFR DataMonitor | | ✓ | | ✓ | | | ✓ |
+| 3. DeepVariant FT | | | | | | | ✓ |
+| 4. Agentic bioArchitect | ✓ | ✓ | | | | ✓ | |
+| 5. ZeroShot ImmuneFeatureDrift | | | | | ✓ | | ✓ |
+| 6. PhasedVariants AgenticCurator | ✓ | ✓ | ✓ | | ✓ | ✓ | |
+
+P3 (Eval gap) and P6 (Human-in-loop) are addressed by the most technically novel project (PhasedVariants) — these are the two hardest enterprise blockers and the primary differentiators of this portfolio.
 
 ---
 
