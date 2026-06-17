@@ -24,13 +24,16 @@ Seven pain points commonly block enterprise agentic AI deployments. Each project
 
 ## Projects
 
-### 1. [DNBSEQ Complete WGS Pipeline](https://github.com/Complete-Genomics/DNBSEQ_Complete_WGS)
-> Production-grade WGS pipeline integrating two library chemistries (PCR-free + DNB-barcoded cWGS) into phased, high-accuracy variant calls.
+### 1. [PhasedVariants AgenticCurator](https://github.com/arcadianlyric/PhasedVariants_AgenticCurator)
+> Multi-agent LLM system with RAG and knowledge graph integration that automates interpretation of phased WGS variants — linking haplotype-resolved genotypes to gene function, disease mechanisms, and clinical significance.
 
-- **Stack**: Nextflow DSL2 · Lariat · BWA · DeepVariant · GATK · HapCUT2 · SOAPnuke · MegaBOLT · Singularity
-- **Scale**: Parallel real-world human sequencing data 
-- **Highlights**: Pangenome-aware DeepVariant (GBZ graph reference), phased SNP/indel/SV calls, modular process design with configurable variant callers and aligners
-- **Pain points addressed**: Prerequisite for enterprise agentic reliability — demonstrates production ML under CLIA/HIPAA regulatory constraints (auditable, reproducible, versioned). Agentic systems are only trustworthy if the upstream ML tools they call meet this bar.
+- **Stack**: LangChain · FAISS · DeepSeek · Grok (xAI) · PrimeKG · VEP · PubMed / GeneCards / arXiv / Tavily · sentence-transformers · ClinVar
+- **Highlights**:
+  - **3-stage pipeline**: VEP-annotated phased VCF → interactive gene-disease-pathway network (PrimeKG) → multi-source literature retrieval (progressive search across 4 APIs) → agentic curation with quality-controlled output
+  - **Dual-agent review loop**: Output Agent (DeepSeek, RAG + KG context) generates analysis; Review Agent (Grok) independently scores 5 dimensions (0–10) and flags hallucinations; loop iterates until quality threshold (7.0/10) is met. Different LLMs used by design to eliminate shared blind spots
+  - **Hallucination reduction**: Cross-model review + FAISS-grounded retrieval; benchmarked against single-agent baselines (`llm_queryAlone`, `llm_augmented`, `llm_rag`, v1 7-agent legacy)
+  - Directly consumes phased VCF output from Project 1 (DNBSEQ_Complete_WGS)
+- **Pain points addressed**: **P1 Multi-step error** — 3-iteration stop/revise loop with explicit convergence criterion prevents unchecked error propagation; **P3 Eval gap** — 5-dimension scoring rubric (accuracy, completeness, clinical relevance, hallucination rate, tool-use accuracy) is a deployable evaluation framework for any agentic output; **P5 Context degradation** — FAISS chunk-alignment fix ensures retrieval context matches LLM window; **P6 Human-in-loop** — quality gate (7.0/10) and stop/revise logic encode principled stopping criterion; **P2 Tool-use reliability** — cross-model adversarial review flags tool-call errors that a single LLM would miss.
 
 ---
 
@@ -70,16 +73,13 @@ Seven pain points commonly block enterprise agentic AI deployments. Each project
 
 ---
 
-### 6. [PhasedVariants AgenticCurator](https://github.com/arcadianlyric/PhasedVariants_AgenticCurator)
-> Multi-agent LLM system with RAG and knowledge graph integration that automates interpretation of phased WGS variants — linking haplotype-resolved genotypes to gene function, disease mechanisms, and clinical significance.
+### 6. [DNBSEQ Complete WGS Pipeline](https://github.com/Complete-Genomics/DNBSEQ_Complete_WGS)
+> Production-grade WGS pipeline integrating two library chemistries (PCR-free + DNB-barcoded cWGS) into phased, high-accuracy variant calls.
 
-- **Stack**: LangChain · FAISS · DeepSeek · Grok (xAI) · PrimeKG · VEP · PubMed / GeneCards / arXiv / Tavily · sentence-transformers · ClinVar
-- **Highlights**:
-  - **3-stage pipeline**: VEP-annotated phased VCF → interactive gene-disease-pathway network (PrimeKG) → multi-source literature retrieval (progressive search across 4 APIs) → agentic curation with quality-controlled output
-  - **Dual-agent review loop**: Output Agent (DeepSeek, RAG + KG context) generates analysis; Review Agent (Grok) independently scores 5 dimensions (0–10) and flags hallucinations; loop iterates until quality threshold (7.0/10) is met. Different LLMs used by design to eliminate shared blind spots
-  - **Hallucination reduction**: Cross-model review + FAISS-grounded retrieval; benchmarked against single-agent baselines (`llm_queryAlone`, `llm_augmented`, `llm_rag`, v1 7-agent legacy)
-  - Directly consumes phased VCF output from Project 1 (DNBSEQ_Complete_WGS)
-- **Pain points addressed**: **P1 Multi-step error** — 3-iteration stop/revise loop with explicit convergence criterion prevents unchecked error propagation; **P3 Eval gap** — 5-dimension scoring rubric (accuracy, completeness, clinical relevance, hallucination rate, tool-use accuracy) is a deployable evaluation framework for any agentic output; **P5 Context degradation** — FAISS chunk-alignment fix ensures retrieval context matches LLM window; **P6 Human-in-loop** — quality gate (7.0/10) and stop/revise logic encode principled stopping criterion; **P2 Tool-use reliability** — cross-model adversarial review flags tool-call errors that a single LLM would miss.
+- **Stack**: Nextflow DSL2 · Lariat · BWA · DeepVariant · GATK · HapCUT2 · SOAPnuke · MegaBOLT · Singularity
+- **Scale**: Parallel real-world human sequencing data 
+- **Highlights**: Pangenome-aware DeepVariant (GBZ graph reference), phased SNP/indel/SV calls, modular process design with configurable variant callers and aligners
+- **Pain points addressed**: Prerequisite for enterprise agentic reliability — demonstrates production ML under CLIA/HIPAA regulatory constraints (auditable, reproducible, versioned). Agentic systems are only trustworthy if the upstream ML tools they call meet this bar.
 
 ---
 
